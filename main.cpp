@@ -11,6 +11,9 @@
 #include <typeinfo>
 #include <tuple>
 
+#include <cassert>
+#include <variant>
+
 template <typename T>
 struct type_name_traits;
  
@@ -59,7 +62,7 @@ struct type_list_extract<idx, TypeList<Types...>> {
 };
  
 template <std::size_t idx, class TypeList>
-using type_list_extract_t = typename type_list_extract<idx, TypeList>::type;
+using type_list_element = typename type_list_extract<idx, TypeList>::type;
  
 template <typename>
 struct type_list_size {};
@@ -77,7 +80,7 @@ struct type_list_visit{
        
         // todo: this is temporary...
         std::cout << "N: " << N - 1 << " - " 
-            << type_name_traits<type_list_extract_t<(N-1), List>>::name << std::endl;
+            << type_name_traits<type_list_element<(N-1), List>>::name << std::endl;
 
         type_list_visit<N-1, List>::visit();
     }
@@ -142,6 +145,15 @@ struct type_list_has_type<type_list<Types...>, T> {
         std::true_type, std::false_type>::type;
 };
 
+template <typename>
+struct variant_wrap {};
+
+template <typename... Types>
+struct variant_wrap<type_list<Types...>> {
+    using type = std::variant<Types...>;
+};
+
+
 int main(int argc, char * argv[]) {
     (void) argc;
     (void) argv;
@@ -153,9 +165,9 @@ int main(int argc, char * argv[]) {
 
     type_list_visit<type_list_size<list_t>::size, list_t>::visit();
 
-    static_assert( std::is_same<char, type_list_extract_t<0, list_t>>::value, "!" );
-    static_assert( std::is_same<bool, type_list_extract_t<1, list_t>>::value, "!" );
-    static_assert( std::is_same<void, type_list_extract_t<2, list_t>>::value, "!" );
+    static_assert( std::is_same<char, type_list_element<0, list_t>>::value, "!" );
+    static_assert( std::is_same<bool, type_list_element<1, list_t>>::value, "!" );
+    static_assert( std::is_same<void, type_list_element<2, list_t>>::value, "!" );
 
     using list_t2 = type_list_append<list_t>::type<double, std::string>;
     
@@ -164,11 +176,11 @@ int main(int argc, char * argv[]) {
 
     type_list_visit<type_list_size<list_t2>::size, list_t2>::visit();
 
-    static_assert( std::is_same<char, type_list_extract_t<0, list_t2>>::value, "!" );
-    static_assert( std::is_same<bool, type_list_extract_t<1, list_t2>>::value, "!" );
-    static_assert( std::is_same<void, type_list_extract_t<2, list_t2>>::value, "!" );
-    static_assert( std::is_same<double, type_list_extract_t<3, list_t2>>::value, "!" );
-    static_assert( std::is_same<std::string, type_list_extract_t<4, list_t2>>::value, "!" );
+    static_assert( std::is_same<char, type_list_element<0, list_t2>>::value, "!" );
+    static_assert( std::is_same<bool, type_list_element<1, list_t2>>::value, "!" );
+    static_assert( std::is_same<void, type_list_element<2, list_t2>>::value, "!" );
+    static_assert( std::is_same<double, type_list_element<3, list_t2>>::value, "!" );
+    static_assert( std::is_same<std::string, type_list_element<4, list_t2>>::value, "!" );
 
     using list_t3 = type_list_remove<list_t2, void>::type;
 
@@ -179,6 +191,16 @@ int main(int argc, char * argv[]) {
     static_assert( std::is_same<std::false_type, type_list_has_type<list_t3, int>::type>::value, "!" );
     static_assert( std::is_same<std::true_type, type_list_has_type<list_t3, double>::type>::value, "!" );
     static_assert( std::is_same<std::true_type, type_list_has_type<list_t3, std::string>::type>::value, "!" );
+
+    /* variant example */
+
+    using variant_helper_list = type_list<int, double>;
+    using variant_type = ::variant_wrap<variant_helper_list>::type;
+    std::array<variant_type, 2> variant_instance;
+    variant_instance[0] = 1;
+    variant_instance[1] = 3.14;
+
+    std::cout << std::get< type_list_element<0, variant_helper_list> >( std::get<0>(variant_instance) ) << std::endl;
 
     return 0;
 }

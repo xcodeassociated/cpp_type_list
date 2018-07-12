@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(POSSIBLE_BUILD_TYPES "Debug Release RelWithDebInfo MinSizeRel")
+set(POSSIBLE_BUILD_TYPES "Debug Release RelWithDebInfo")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "CMAKE_BUILD_TYPE option: Debug Release RelWithDebInfo MinSizeRel")
+        "CMAKE_BUILD_TYPE option: Debug Release RelWithDebInfo")
     message(STATUS "Using default CMAKE_BUILD_TYPE: Debug")
 else()
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "CMAKE_BUILD_TYPE option: Debug Release RelWithDebInfo MinSizeRel")
+        "CMAKE_BUILD_TYPE option: Debug Release RelWithDebInfo")
 endif()
 
 string(REPLACE " " ";" BUILD_TYPES ${POSSIBLE_BUILD_TYPES})
@@ -22,15 +22,17 @@ project(type_list)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_STANDARD 11)
 
 if (NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3 -g")
 else()
+    set(CMAKE_CXX_STANDARD 17)
     message (STATUS "MSVC ${MSVC_VERSION}v")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
