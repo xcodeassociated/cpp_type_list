@@ -145,6 +145,8 @@ struct type_list_has_type<type_list<Types...>, T> {
         std::true_type, std::false_type>::type;
 };
 
+
+
 template <typename>
 struct variant_wrap {};
 
@@ -154,9 +156,37 @@ struct variant_wrap<type_list<Types...>> {
 };
 
 
+
+template <class TypeList, std::size_t Index = type_list_size<TypeList>::size>
+struct type_array_visitor{
+    template <typename Array>
+    static void visit(Array && array) {
+        try {
+            // code...
+            std::cout << std::get< type_list_element<Index-1, TypeList> >( std::get<Index-1>(array) ) << std::endl;
+            
+            type_array_visitor<TypeList, Index-1>::visit(array);
+        } catch(...) {
+            // handle variant execption...
+        }
+    }
+};
+
+template <class TypeList>
+struct type_array_visitor<TypeList, 1>{
+    template <typename Array>
+    static void visit(Array && array) {
+        std::cout << std::get< type_list_element<0, TypeList> >( std::get<0>(array) ) << std::endl;
+    }
+};
+
+
+
 int main(int argc, char * argv[]) {
     (void) argc;
     (void) argv;
+
+    /* type list tests */
 
     using list_t = type_list<char, bool, void>;
 
@@ -194,13 +224,17 @@ int main(int argc, char * argv[]) {
 
     /* variant example */
 
-    using variant_helper_list = type_list<int, double>;
-    using variant_type = ::variant_wrap<variant_helper_list>::type;
-    std::array<variant_type, 2> variant_instance;
+    using variant_helper_list = type_list<int, double, std::string>;
+    using variant_type = variant_wrap<variant_helper_list>::type;
+    using type_array = std::array<variant_type, type_list_size<variant_helper_list>::size>;
+    type_array variant_instance;
     variant_instance[0] = 1;
     variant_instance[1] = 3.14;
+    variant_instance[2] = "string";
 
-    std::cout << std::get< type_list_element<0, variant_helper_list> >( std::get<0>(variant_instance) ) << std::endl;
+    type_array_visitor<variant_helper_list>::visit(variant_instance);
+
+    // todo: variant of optionals
 
     return 0;
 }
